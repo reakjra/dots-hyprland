@@ -252,6 +252,131 @@ ContentPage {
     }
 
     ContentSection {
+        icon: "memory"
+        title: Translation.tr("Resources")
+
+        ContentSubsection {
+            title: Translation.tr("Always show in bar")
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "memory"
+                    text: Translation.tr("CPU")
+                    checked: Config.options.bar.resources.alwaysShowCpu
+                    onCheckedChanged: {
+                        Config.options.bar.resources.alwaysShowCpu = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "swap_horiz"
+                    text: Translation.tr("Swap")
+                    checked: Config.options.bar.resources.alwaysShowSwap
+                    onCheckedChanged: {
+                        Config.options.bar.resources.alwaysShowSwap = checked;
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "airwave"
+                    text: Translation.tr("GPU")
+                    checked: Config.options.bar.resources.alwaysShowGPU
+                    onCheckedChanged: {
+                        Config.options.bar.resources.alwaysShowGPU = checked;
+                    }
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("GPU Display")
+
+            ConfigSelectionArray {
+                currentValue: Config.options.bar.resources.gpuLayout
+                onSelected: newValue => {
+                    Config.options.bar.resources.gpuLayout = newValue;
+                }
+                options: [
+                    {
+                        displayName: Translation.tr("dGPU only"),
+                        icon: "device_thermostat",
+                        value: 0
+                    },
+                    {
+                        displayName: Translation.tr("iGPU only"),
+                        icon: "memory",
+                        value: 1
+                    },
+                    {
+                        displayName: Translation.tr("Both GPUs"),
+                        icon: "grid_view",
+                        value: 2
+                    }
+                ]
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Warning thresholds (%)")
+
+            ConfigRow {
+                uniform: true
+                ConfigSpinBox {
+                    icon: "deployed_code"
+                    text: Translation.tr("Memory")
+                    value: Config.options.bar.resources.memoryWarningThreshold
+                    from: 50
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.options.bar.resources.memoryWarningThreshold = value;
+                    }
+                }
+                ConfigSpinBox {
+                    icon: "swap_horiz"
+                    text: Translation.tr("Swap")
+                    value: Config.options.bar.resources.swapWarningThreshold
+                    from: 50
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.options.bar.resources.swapWarningThreshold = value;
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSpinBox {
+                    icon: "memory"
+                    text: Translation.tr("CPU")
+                    value: Config.options.bar.resources.cpuWarningThreshold
+                    from: 50
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.options.bar.resources.cpuWarningThreshold = value;
+                    }
+                }
+                ConfigSpinBox {
+                    icon: "airwave"
+                    text: Translation.tr("GPU")
+                    value: Config.options.bar.resources.gpuWarningThreshold
+                    from: 50
+                    to: 100
+                    stepSize: 5
+                    onValueChanged: {
+                        Config.options.bar.resources.gpuWarningThreshold = value;
+                    }
+                }
+            }
+        }
+    }
+
+    ContentSection {
         icon: "workspaces"
         title: Translation.tr("Workspaces")
 

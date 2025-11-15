@@ -10,9 +10,11 @@ import qs.modules.ii.overlay.crosshair
 import qs.modules.ii.overlay.volumeMixer
 import qs.modules.ii.overlay.floatingImage
 import qs.modules.ii.overlay.fpsLimiter
+import qs.modules.ii.overlay.processMonitor
 import qs.modules.ii.overlay.recorder
 import qs.modules.ii.overlay.resources
 import qs.modules.ii.overlay.notes
+import qs.modules.ii.overlay.webView
 
 DelegateChooser {
     id: root
@@ -21,8 +23,10 @@ DelegateChooser {
     DelegateChoice { roleValue: "crosshair"; Crosshair {} }
     DelegateChoice { roleValue: "floatingImage"; FloatingImage {} }
     DelegateChoice { roleValue: "fpsLimiter"; FpsLimiter {} }
+    DelegateChoice { roleValue: "processMonitor"; ProcessMonitor {} }
     DelegateChoice { roleValue: "recorder"; Recorder {} }
     DelegateChoice { roleValue: "resources"; Resources {} }
     DelegateChoice { roleValue: "notes"; Notes {} }
     DelegateChoice { roleValue: "volumeMixer"; VolumeMixer {} }
+    DelegateChoice { roleValue: "webView"; WebView {} }
 }

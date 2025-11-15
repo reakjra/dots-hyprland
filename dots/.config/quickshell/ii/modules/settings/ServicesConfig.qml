@@ -82,7 +82,327 @@ ContentPage {
                 Config.options.resources.updateInterval = value;
             }
         }
-        
+
+        ConfigSpinBox {
+            icon: "chart_data"
+            text: Translation.tr("History length (data points)")
+            value: Config.options.resources.historyLength
+            from: 10
+            to: 300
+            stepSize: 10
+            onValueChanged: {
+                Config.options.resources.historyLength = value;
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Enable monitoring")
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "memory"
+                    text: Translation.tr("CPU")
+                    checked: Config.options.resources.enableCpu
+                    onCheckedChanged: {
+                        Config.options.resources.enableCpu = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "deployed_code"
+                    text: Translation.tr("RAM")
+                    checked: Config.options.resources.enableRam
+                    onCheckedChanged: {
+                        Config.options.resources.enableRam = checked;
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "swap_horiz"
+                    text: Translation.tr("Swap")
+                    checked: Config.options.resources.enableSwap
+                    onCheckedChanged: {
+                        Config.options.resources.enableSwap = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "airwave"
+                    text: Translation.tr("GPU")
+                    checked: Config.options.resources.enableGpu
+                    onCheckedChanged: {
+                        Config.options.resources.enableGpu = checked;
+                    }
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("GPU Configuration")
+
+            ConfigRow {
+                uniform: true
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("dGPU card (e.g., card0, leave empty for auto)")
+                    text: Config.options.resources.gpu.dgpuCard
+                    wrapMode: TextEdit.Wrap
+                    onTextChanged: {
+                        Config.options.resources.gpu.dgpuCard = text;
+                    }
+                }
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("dGPU name override (leave empty for auto)")
+                    text: Config.options.resources.gpu.dgpuName
+                    wrapMode: TextEdit.Wrap
+                    onTextChanged: {
+                        Config.options.resources.gpu.dgpuName = text;
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("iGPU card (e.g., card1, leave empty for auto)")
+                    text: Config.options.resources.gpu.igpuCard
+                    wrapMode: TextEdit.Wrap
+                    onTextChanged: {
+                        Config.options.resources.gpu.igpuCard = text;
+                    }
+                }
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("iGPU name override (leave empty for auto)")
+                    text: Config.options.resources.gpu.igpuName
+                    wrapMode: TextEdit.Wrap
+                    onTextChanged: {
+                        Config.options.resources.gpu.igpuName = text;
+                    }
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Overlay GPU Display")
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "device_thermostat"
+                    text: Translation.tr("Show dGPU")
+                    checked: Config.options.resources.gpu.overlay.showDGpu
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.showDGpu = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "memory"
+                    text: Translation.tr("Show iGPU")
+                    checked: Config.options.resources.gpu.overlay.showIGpu
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.showIGpu = checked;
+                    }
+                }
+            }
+
+            ContentSubsectionLabel {
+                text: Translation.tr("dGPU metrics")
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "speed"
+                    text: Translation.tr("Usage")
+                    checked: Config.options.resources.gpu.overlay.dGpu.showUsage
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.dGpu.showUsage = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "storage"
+                    text: Translation.tr("VRAM")
+                    checked: Config.options.resources.gpu.overlay.dGpu.showVram
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.dGpu.showVram = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "device_thermostat"
+                    text: Translation.tr("Temp")
+                    checked: Config.options.resources.gpu.overlay.dGpu.showTemp
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.dGpu.showTemp = checked;
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "air"
+                    text: Translation.tr("Fan")
+                    checked: Config.options.resources.gpu.overlay.dGpu.showFan
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.dGpu.showFan = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "bolt"
+                    text: Translation.tr("Power")
+                    checked: Config.options.resources.gpu.overlay.dGpu.showPower
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.dGpu.showPower = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "local_fire_department"
+                    text: Translation.tr("Temp Junction")
+                    checked: Config.options.resources.gpu.overlay.dGpu.showTempJunction
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.dGpu.showTempJunction = checked;
+                    }
+                }
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "memory_alt"
+                    text: Translation.tr("Temp Memory")
+                    checked: Config.options.resources.gpu.overlay.dGpu.showTempMem
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.dGpu.showTempMem = checked;
+                    }
+                }
+            }
+
+            ContentSubsectionLabel {
+                text: Translation.tr("iGPU metrics")
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "speed"
+                    text: Translation.tr("Usage")
+                    checked: Config.options.resources.gpu.overlay.iGpu.showUsage
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.iGpu.showUsage = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "storage"
+                    text: Translation.tr("VRAM")
+                    checked: Config.options.resources.gpu.overlay.iGpu.showVram
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.iGpu.showVram = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "device_thermostat"
+                    text: Translation.tr("Temp")
+                    checked: Config.options.resources.gpu.overlay.iGpu.showTemp
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.overlay.iGpu.showTemp = checked;
+                    }
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Bar Popup GPU Display")
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "device_thermostat"
+                    text: Translation.tr("Show dGPU")
+                    checked: Config.options.resources.gpu.bar.showDGpu
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.bar.showDGpu = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "memory"
+                    text: Translation.tr("Show iGPU")
+                    checked: Config.options.resources.gpu.bar.showIGpu
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.bar.showIGpu = checked;
+                    }
+                }
+            }
+
+            ContentSubsectionLabel {
+                text: Translation.tr("dGPU metrics")
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "speed"
+                    text: Translation.tr("Usage")
+                    checked: Config.options.resources.gpu.bar.dGpu.showUsage
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.bar.dGpu.showUsage = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "storage"
+                    text: Translation.tr("VRAM")
+                    checked: Config.options.resources.gpu.bar.dGpu.showVram
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.bar.dGpu.showVram = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "device_thermostat"
+                    text: Translation.tr("Temp")
+                    checked: Config.options.resources.gpu.bar.dGpu.showTemp
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.bar.dGpu.showTemp = checked;
+                    }
+                }
+            }
+
+            ContentSubsectionLabel {
+                text: Translation.tr("iGPU metrics")
+            }
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "speed"
+                    text: Translation.tr("Usage")
+                    checked: Config.options.resources.gpu.bar.iGpu.showUsage
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.bar.iGpu.showUsage = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "storage"
+                    text: Translation.tr("VRAM")
+                    checked: Config.options.resources.gpu.bar.iGpu.showVram
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.bar.iGpu.showVram = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "device_thermostat"
+                    text: Translation.tr("Temp")
+                    checked: Config.options.resources.gpu.bar.iGpu.showTemp
+                    onCheckedChanged: {
+                        Config.options.resources.gpu.bar.iGpu.showTemp = checked;
+                    }
+                }
+            }
+        }
+
     }
 
     ContentSection {

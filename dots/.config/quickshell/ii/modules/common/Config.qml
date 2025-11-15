@@ -228,6 +228,9 @@ Singleton {
                     property int memoryWarningThreshold: 95
                     property int swapWarningThreshold: 85
                     property int cpuWarningThreshold: 90
+                    property bool alwaysShowGPU: false
+                    property int gpuLayout: 0 // 0: dGPU only | 1: iGPU only | 2: Both
+                    property int gpuWarningThreshold: 90
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
                 property JsonObject utilButtons: JsonObject {
@@ -391,6 +394,18 @@ Singleton {
                     property string imageSource: "https://media.tenor.com/H5U5bJzj3oAAAAAi/kukuru.gif"
                     property real scale: 0.5
                 }
+                property JsonObject webView: JsonObject {
+                    property list<var> bookmarks: [
+                        {
+                            "name": "DuckDuckGo",
+                            "url": "https://duckduckgo.com"
+                        },
+                        {
+                            "name": "GitHub",
+                            "url": "https://github.com"
+                        }
+                    ]
+                }
             }
 
             property JsonObject overview: JsonObject {
@@ -420,9 +435,67 @@ Singleton {
                 }
             }
 
+            // Global resource monitoring settings (for overlay and system-wide monitoring)
+            // Note: bar.resources (line 223) controls bar-specific display settings
             property JsonObject resources: JsonObject {
-                property int updateInterval: 3000
-                property int historyLength: 60
+                property int updateInterval: 3000 // milliseconds
+                property int historyLength: 60 // data points to keep in history
+
+                // Enable/disable resource monitoring globally
+                property bool enableCpu: true
+                property bool enableGpu: true
+                property bool enableRam: true
+                property bool enableSwap: true
+
+                property JsonObject gpu: JsonObject {
+                    // Manual card override (e.g., "card1" for AMD_GPU_CARD/INTEL_GPU_CARD)
+                    property string dgpuCard: ""
+                    property string igpuCard: ""
+
+                    // Manual GPU name override (if empty, uses detected name)
+                    property string dgpuName: ""
+                    property string igpuName: ""
+
+                    // Overlay widget GPU display settings
+                    property JsonObject overlay: JsonObject {
+                        property bool showDGpu: true
+                        property bool showIGpu: false
+
+                        property JsonObject dGpu: JsonObject {
+                            property bool showUsage: true
+                            property bool showVram: true
+                            property bool showTemp: true
+                            property bool showTempJunction: false  // AMD only
+                            property bool showTempMem: false       // AMD only
+                            property bool showFan: true
+                            property bool showPower: true
+                        }
+
+                        property JsonObject iGpu: JsonObject {
+                            property bool showUsage: true
+                            property bool showVram: true
+                            property bool showTemp: true
+                        }
+                    }
+
+                    // Bar popup GPU settings
+                    property JsonObject bar: JsonObject {
+                        property bool showDGpu: true
+                        property bool showIGpu: false
+
+                        property JsonObject dGpu: JsonObject {
+                            property bool showUsage: true
+                            property bool showVram: true
+                            property bool showTemp: true
+                        }
+
+                        property JsonObject iGpu: JsonObject {
+                            property bool showUsage: true
+                            property bool showVram: true
+                            property bool showTemp: true
+                        }
+                    }
+                }
             }
 
             property JsonObject tray: JsonObject {

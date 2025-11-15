@@ -8,11 +8,14 @@ Singleton {
     readonly property list<var> availableWidgets: [
         { identifier: "crosshair", materialSymbol: "point_scan" },
         { identifier: "fpsLimiter", materialSymbol: "animation" },
+        { identifier: "notes", materialSymbol: "note_stack" },
         { identifier: "floatingImage", materialSymbol: "imagesmode" },
+        { identifier: "processMonitor", materialSymbol: "list_alt" },
         { identifier: "recorder", materialSymbol: "screen_record" },
         { identifier: "resources", materialSymbol: "browse_activity" },
-        { identifier: "notes", materialSymbol: "note_stack" },
         { identifier: "volumeMixer", materialSymbol: "volume_up" },
+        { identifier: "webView", materialSymbol: "planet" },
+
     ]
     
     readonly property bool hasPinnedWidgets: root.pinnedWidgetIdentifiers.length > 0

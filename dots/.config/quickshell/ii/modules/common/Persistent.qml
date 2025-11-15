@@ -105,6 +105,14 @@ Singleton {
                     property real width: 280
                     property real height: 80
                 }
+                property JsonObject processMonitor: JsonObject {
+                    property bool pinned: false
+                    property bool clickthrough: false
+                    property real x: 530
+                    property real y: 600
+                    property real width: 530
+                    property real height: 600
+                }
                 property JsonObject recorder: JsonObject {
                     property bool pinned: false
                     property bool clickthrough: false
@@ -130,6 +138,14 @@ Singleton {
                     property real width: 350
                     property real height: 600
                     property int tabIndex: 0
+                }
+                property JsonObject webView: JsonObject {
+                    property bool pinned: false
+                    property bool clickthrough: false
+                    property real x: 80
+                    property real y: 280
+                    property real width: 350
+                    property real height: 600
                 }
                 property JsonObject notes: JsonObject {
                     property bool pinned: false
