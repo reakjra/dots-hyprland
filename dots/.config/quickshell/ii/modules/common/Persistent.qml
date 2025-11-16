@@ -154,6 +154,11 @@ Singleton {
                     property real y: 42
                     property real width: 460
                     property real height: 330
+                    property int currentTab: 0
+                    property bool tabBarVisible: true
+                    property list<var> tabs: [
+                        { "name": "Notes", "id": "default" }
+                    ]
                 }
             }
 

@@ -19,16 +19,136 @@ OverlayBackground {
     property var parsedCopylistLines: []
     property bool isClickthrough: false
     property real maxCopyButtonSize: 20
+    property bool previewMode: false
+
+    property int currentTabIndex: Persistent.states.overlay.notes.currentTab
+    property bool tabBarVisible: Persistent.states.overlay.notes.tabBarVisible
+    property var noteFileViews: ({})
+    property var tabs: []
 
     Component.onCompleted: {
-        noteFile.reload();
+        tabs = Persistent.states.overlay.notes.tabs;
+        loadCurrentTab();
         updateCopyListEntries();
+    }
+
+    Connections {
+        target: Persistent.states.overlay.notes
+        function onTabsChanged() {
+            root.tabs = Persistent.states.overlay.notes.tabs;
+        }
+    }
+
+    function getCurrentTabId() {
+        if (currentTabIndex >= 0 && currentTabIndex < tabs.length) {
+            return tabs[currentTabIndex].id;
+        }
+        return "default";
+    }
+
+    function getNotePath(tabId) {
+        return `${Directories.notesDir}/${tabId}.txt`;
+    }
+
+    function loadCurrentTab() {
+        const tabId = getCurrentTabId();
+        if (!noteFileViews[tabId]) {
+            createFileView(tabId);
+        } else {
+            noteFileViews[tabId].reload();
+        }
+    }
+
+    function createFileView(tabId) {
+        const component = Qt.createComponent("Quickshell.Io", "FileView");
+        if (component.status === Component.Ready) {
+            const fileView = component.createObject(root, {
+                path: Qt.resolvedUrl(getNotePath(tabId))
+            });
+
+            fileView.onLoaded.connect(() => {
+                if (getCurrentTabId() === tabId) {
+                    root.content = fileView.text();
+                    if (pendingReload) {
+                        pendingReload = false;
+                        Qt.callLater(root.focusAtEnd);
+                    }
+                    Qt.callLater(root.updateCopyListEntries);
+                }
+            });
+
+            fileView.onLoadFailed.connect((error) => {
+                if (error === FileViewError.FileNotFound) {
+                    fileView.setText("");
+                    if (getCurrentTabId() === tabId) {
+                        root.content = "";
+                        if (pendingReload) {
+                            pendingReload = false;
+                            Qt.callLater(root.focusAtEnd);
+                        }
+                        Qt.callLater(root.updateCopyListEntries);
+                    }
+                }
+            });
+
+            noteFileViews[tabId] = fileView;
+            fileView.reload();
+        }
+    }
+
+    function switchToTab(index) {
+        if (index >= 0 && index < tabs.length) {
+            saveContent();
+            currentTabIndex = index;
+            Persistent.states.overlay.notes.currentTab = index;
+            loadCurrentTab();
+        }
+    }
+
+    function addNewTab() {
+        const newId = `note_${Date.now()}`;
+        const newTab = { "name": "New Tab", "id": newId };
+        let updatedTabs = tabs.slice();
+        updatedTabs.push(newTab);
+        Persistent.states.overlay.notes.tabs = updatedTabs;
+        tabs = updatedTabs;
+        switchToTab(tabs.length - 1);
+    }
+
+    function closeTab(index) {
+        if (tabs.length <= 1) return;
+
+        let updatedTabs = tabs.slice();
+        const removedTab = updatedTabs[index];
+        updatedTabs.splice(index, 1);
+
+        Persistent.states.overlay.notes.tabs = updatedTabs;
+
+        if (currentTabIndex >= updatedTabs.length) {
+            currentTabIndex = updatedTabs.length - 1;
+            Persistent.states.overlay.notes.currentTab = currentTabIndex;
+        } else if (currentTabIndex === index) {
+            currentTabIndex = Math.max(0, index - 1);
+            Persistent.states.overlay.notes.currentTab = currentTabIndex;
+        }
+
+        loadCurrentTab();
+    }
+
+    function renameTab(index, newName) {
+        let updatedTabs = tabs.slice();
+        updatedTabs[index] = { "name": newName, "id": updatedTabs[index].id };
+        Persistent.states.overlay.notes.tabs = updatedTabs;
+        tabs = updatedTabs;
     }
 
     function saveContent() {
         if (!textInput)
             return;
-        noteFile.setText(root.content);
+        const tabId = getCurrentTabId();
+        if (noteFileViews[tabId]) {
+            noteFileViews[tabId].setText(root.content);
+        }
     }
 
     function focusAtEnd() {
@@ -142,7 +262,25 @@ OverlayBackground {
     ColumnLayout {
         id: contentItem
         anchors.fill: parent
-        spacing: -16
+        spacing: 0
+
+        NotesTabBar {
+            id: tabBar
+            Layout.fillWidth: true
+            Layout.preferredHeight: 30
+            Layout.topMargin: 6
+            Layout.leftMargin: 8
+            Layout.rightMargin: 8
+            Layout.bottomMargin: 4
+            visible: root.tabBarVisible
+            tabs: root.tabs
+            currentTab: root.currentTabIndex
+
+            onTabClicked: index => root.switchToTab(index)
+            onTabClosed: index => root.closeTab(index)
+            onTabRenamed: (index, newName) => root.renameTab(index, newName)
+            onNewTabRequested: root.addNewTab()
+        }
 
         ScrollView {
             id: editorScrollView
@@ -158,6 +296,7 @@ OverlayBackground {
                     left: parent.left
                     right: parent.right
                 }
+                visible: !root.previewMode
                 wrapMode: TextEdit.Wrap
                 placeholderText: Translation.tr("Write something here...\nUse '-' to create copyable bullet points, like this:\n\nSheep fricker\n- 4x Slab\n- 1x Boat\n- 4x Redstone Dust\n- 1x Sticky Piston\n- 1x End Rod\n- 4x Redstone Repeater\n- 1x Redstone Torch\n- 1x Sheep")
                 selectByMouse: true
@@ -165,6 +304,17 @@ OverlayBackground {
                 textFormat: TextEdit.PlainText
                 background: null
                 padding: 24
+
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_M && (event.modifiers & Qt.ControlModifier)) {
+                        root.previewMode = !root.previewMode;
+                        event.accepted = true;
+                    } else if (event.key === Qt.Key_T && (event.modifiers & Qt.ControlModifier)) {
+                        root.tabBarVisible = !root.tabBarVisible;
+                        Persistent.states.overlay.notes.tabBarVisible = root.tabBarVisible;
+                        event.accepted = true;
+                    }
+                }
 
                 onTextChanged: {
                     if (textInput.activeFocus) {
@@ -181,8 +331,60 @@ OverlayBackground {
             }
 
             Item {
+                id: previewContainer
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
+                visible: root.previewMode
+                implicitHeight: previewText.implicitHeight
+                focus: root.previewMode
+
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_M && (event.modifiers & Qt.ControlModifier)) {
+                        root.previewMode = false;
+                        textInput.forceActiveFocus();
+                        event.accepted = true;
+                    } else if (event.key === Qt.Key_T && (event.modifiers & Qt.ControlModifier)) {
+                        root.tabBarVisible = !root.tabBarVisible;
+                        Persistent.states.overlay.notes.tabBarVisible = root.tabBarVisible;
+                        event.accepted = true;
+                    }
+                }
+
+                StyledText {
+                    id: previewText
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                    }
+                    leftPadding: 24
+                    rightPadding: 24
+                    topPadding: 24
+                    bottomPadding: 24
+                    text: root.content
+                    textFormat: Text.MarkdownText
+                    wrapMode: Text.Wrap
+                    onLinkActivated: link => Qt.openUrlExternally(link)
+                }
+
+                Component.onCompleted: {
+                    if (root.previewMode) forceActiveFocus();
+                }
+            }
+
+            Connections {
+                target: root
+                function onPreviewModeChanged() {
+                    if (root.previewMode) {
+                        previewContainer.forceActiveFocus();
+                    }
+                }
+            }
+
+            Item {
                 anchors.fill: parent
-                visible: root.copyListEntries.length > 0
+                visible: !root.previewMode && root.copyListEntries.length > 0
                 clip: true
 
                 Repeater {
@@ -234,13 +436,33 @@ OverlayBackground {
             }
         }
 
-        StyledText {
-            id: statusLabel
+        RowLayout {
             Layout.fillWidth: true
             Layout.margins: 16
-            horizontalAlignment: Text.AlignRight
-            text: saveDebounce.running ? Translation.tr("Saving...") : Translation.tr("Saved    ")
-            color: Appearance.colors.colSubtext
+            spacing: 12
+
+            StyledText {
+                id: modeIndicator
+                Layout.alignment: Qt.AlignLeft
+                text: {
+                    const mode = root.previewMode ? Translation.tr("Preview") : Translation.tr("Edit");
+                    return `${mode} (Ctrl+M | Ctrl+T)`;
+                }
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.small * 0.85
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            StyledText {
+                id: statusLabel
+                Layout.alignment: Qt.AlignRight
+                text: saveDebounce.running ? Translation.tr("Saving...") : Translation.tr("Saved    ")
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.small * 0.85
+            }
         }
     }
 
@@ -256,37 +478,5 @@ OverlayBackground {
         interval: 100
         repeat: false
         onTriggered: updateCopylistPositions()
-    }
-
-    FileView {
-        id: noteFile
-        path: Qt.resolvedUrl(Directories.notesPath)
-        onLoaded: {
-            root.content = noteFile.text();
-            if (root.content !== root.content) {
-                const previousCursor = textInput.cursorPosition;
-                const previousAnchor = textInput.selectionStart;
-                root.content = root.content;
-                applySelection(previousCursor, previousAnchor);
-            }
-            if (pendingReload) {
-                pendingReload = false;
-                Qt.callLater(root.focusAtEnd);
-            }
-            Qt.callLater(root.updateCopyListEntries);
-        }
-        onLoadFailed: error => {
-            if (error === FileViewError.FileNotFound) {
-                root.content = "";
-                noteFile.setText(root.content);
-                if (pendingReload) {
-                    pendingReload = false;
-                    Qt.callLater(root.focusAtEnd);
-                }
-                Qt.callLater(root.updateCopyListEntries);
-            } else {
-                console.log("[Overlay Notes] Error loading file: " + error);
-            }
-        }
     }
 }
