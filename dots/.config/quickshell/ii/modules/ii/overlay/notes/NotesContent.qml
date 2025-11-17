@@ -348,7 +348,6 @@ OverlayBackground {
         const rangeEnd = Math.max(selectionStart, selectionEnd);
 
         const entries = parsedCopylistLines.map(line => {
-            // Don't show copy button if line is (partially) selected
             const caretIntersects = rangeEnd > line.start && rangeStart <= line.end;
             if (caretIntersects)
                 return null;
@@ -404,9 +403,9 @@ OverlayBackground {
             ScrollBar.vertical.policy: ScrollBar.AsNeeded
             onWidthChanged: root.scheduleCopylistUpdate(true)
 
-            StyledTextArea { // This has to be a direct child of ScrollView for proper scrolling
+            StyledTextArea {
                 id: textInput
-                anchors.fill: parent
+                width: editorScrollView.width
                 visible: !root.previewMode
                 wrapMode: TextEdit.Wrap
                 placeholderText: Translation.tr("Write something here...\nUse '-' to create copyable bullet points, like this:\n\nSheep fricker\n- 4x Slab\n- 1x Boat\n- 4x Redstone Dust\n- 1x Sticky Piston\n- 1x End Rod\n- 4x Redstone Repeater\n- 1x Redstone Torch\n- 1x Sheep")
@@ -436,9 +435,9 @@ OverlayBackground {
 
             Item {
                 id: previewContainer
-                anchors.fill: parent
+                width: editorScrollView.width
+                height: previewText.implicitHeight
                 visible: root.previewMode
-                implicitHeight: previewText.implicitHeight
                 focus: root.previewMode
 
                 Keys.onPressed: event => {
@@ -447,10 +446,7 @@ OverlayBackground {
 
                 StyledText {
                     id: previewText
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                    }
+                    width: parent.width
                     leftPadding: 24
                     rightPadding: 24
                     topPadding: 24
@@ -476,7 +472,8 @@ OverlayBackground {
             }
 
             Item {
-                anchors.fill: parent
+                width: editorScrollView.width
+                height: textInput.height
                 visible: !root.previewMode && root.copyListEntries.length > 0
                 clip: true
 
@@ -495,9 +492,8 @@ OverlayBackground {
                         implicitHeight: lineHeight
                         implicitWidth: lineHeight
                         buttonRadius: height / 2
+                        x: textInput.padding + textInput.contentWidth + 35
                         y: modelData.y
-                        anchors.right: parent.right
-                        anchors.rightMargin: 10
                         z: 5
 
                         Timer {
@@ -697,7 +693,6 @@ OverlayBackground {
             }
 
             onTextChanged: {
-                // Only reset to Normal if user is typing (text is not empty)
                 if (text.length > 0 && root.currentExportState !== NotesContent.ExportState.Normal) {
                     root.currentExportState = NotesContent.ExportState.Normal;
                 }
