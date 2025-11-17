@@ -20,6 +20,12 @@ Item {
 
     implicitHeight: 30
 
+    function scrollToEnd() {
+        Qt.callLater(() => {
+            scrollView.ScrollBar.horizontal.position = 1.0 - scrollView.ScrollBar.horizontal.size;
+        });
+    }
+
     ScrollView {
         id: scrollView
         anchors {
@@ -34,7 +40,7 @@ Item {
         ScrollBar.vertical.policy: ScrollBar.AlwaysOff
 
         Row {
-            spacing: 4
+            spacing: 6
 
             Repeater {
                 model: ScriptModel {
@@ -54,13 +60,18 @@ Item {
 
                     Rectangle {
                         id: tabBg
-                        width: contentRow.width + 16
+                        width: contentRow.width + 20
                         height: parent.height
-                        radius: 6
-                        color: isActive ? Appearance.colors.colSecondaryContainer : Appearance.colors.colLayer1
-                        opacity: isActive ? 1.0 : (tabMouseArea.containsMouse ? 0.3 : 0.15)
-                        border.width: isActive ? 0 : 1
-                        border.color: Appearance.colors.colOutline
+                        radius: Appearance.rounding.small
+                        color: isActive ? Appearance.colors.colSecondaryContainer : (tabMouseArea.containsMouse ? Appearance.colors.colLayer2 : Appearance.colors.colLayer1)
+                        opacity: isActive ? 1.0 : (tabMouseArea.containsMouse ? 0.7 : 0.5)
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: 150
+                                easing.type: Easing.OutCubic
+                            }
+                        }
 
                         Behavior on opacity {
                             NumberAnimation {
@@ -108,26 +119,55 @@ Item {
                             visible: !isEditing
                             text: tabDelegate.modelData.name || "Untitled"
                             font.pixelSize: Appearance.font.pixelSize.small
-                            color: isActive ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
-                            opacity: isActive ? 1.0 : 0.7
+                            font.weight: isActive ? Font.Medium : Font.Normal
+                            color: isActive ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurface
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
                         }
 
                         Item {
-                            width: 14
-                            height: 14
+                            width: 6
+                            height: 1
+                            visible: root.tabs.length > 1
+                        }
+
+                        Rectangle {
+                            width: 16
+                            height: 16
                             anchors.verticalCenter: parent.verticalCenter
                             visible: root.tabs.length > 1
+                            radius: 8
+                            color: closeMouseArea.containsMouse ? Appearance.colors.colLayer3 : "transparent"
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+                            }
 
                             MaterialSymbol {
                                 anchors.centerIn: parent
                                 text: "close"
-                                iconSize: 10
-                                color: Appearance.colors.colOnLayer1
+                                iconSize: 12
+                                color: isActive ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colSubtext
+                                opacity: closeMouseArea.containsMouse ? 1.0 : 0.6
+
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: 150
+                                    }
+                                }
                             }
 
                             MouseArea {
+                                id: closeMouseArea
                                 anchors.fill: parent
                                 anchors.margins: -2
+                                hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.tabClosed(tabDelegate.index)
                             }
@@ -157,23 +197,31 @@ Item {
         }
     }
 
-    RippleButton {
+    Item {
         id: newTabButton
         anchors {
             right: parent.right
             verticalCenter: parent.verticalCenter
         }
-        width: 20
-        height: 20
-        buttonRadius: 10
+        width: 24
+        height: 24
 
-        onClicked: root.newTabRequested()
+        RippleButton {
+            anchors.fill: parent
+            buttonRadius: Appearance.rounding.small
+            colBackground: Appearance.colors.colLayer2
+            colBackgroundHover: Appearance.colors.colLayer3
 
-        contentItem: MaterialSymbol {
-            anchors.centerIn: parent
-            text: "add"
-            iconSize: 13
-            color: Appearance.colors.colOnLayer1
+            onClicked: root.newTabRequested()
+
+            contentItem: MaterialSymbol {
+                anchors.fill: parent
+                text: "add"
+                iconSize: 16
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                color: Appearance.colors.colOnSurface
+            }
         }
     }
 }

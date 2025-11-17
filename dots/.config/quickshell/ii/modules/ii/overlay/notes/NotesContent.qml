@@ -12,6 +12,8 @@ import qs.modules.ii.overlay
 OverlayBackground {
     id: root
 
+    enum ExportState { Normal, Success, Error }
+
     property alias content: textInput.text
     property bool pendingReload: false
     property var copyListEntries: []
@@ -20,11 +22,61 @@ OverlayBackground {
     property bool isClickthrough: false
     property real maxCopyButtonSize: 20
     property bool previewMode: false
+    property bool exportDialogVisible: false
+    property var currentExportState: NotesContent.ExportState.Normal
 
     property int currentTabIndex: Persistent.states.overlay.notes.currentTab
     property bool tabBarVisible: Persistent.states.overlay.notes.tabBarVisible
     property var noteFileViews: ({})
     property var tabs: []
+    property bool showSavedNotification: false
+
+    FileView {
+        id: exportFileView
+    }
+
+    Process {
+        id: exportTestProcess
+        running: false
+
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                exportPathField.text = "";
+                root.currentExportState = NotesContent.ExportState.Error;
+                exportStateResetTimer.restart();
+            } else {
+                if (!expandedExportPath.startsWith("file://")) {
+                    expandedExportPath = "file://" + expandedExportPath;
+                }
+                exportFileView.path = expandedExportPath;
+                exportFileView.setText(root.content);
+                exportCheckTimer.start();
+            }
+        }
+    }
+
+    property string expandedExportPath: ""
+
+    Timer {
+        id: exportCheckTimer
+        interval: 200
+        onTriggered: {
+            exportPathField.text = "";
+            root.currentExportState = NotesContent.ExportState.Success;
+            exportStateResetTimer.restart();
+            root.exportDialogVisible = false;
+            root.showSavedNotification = true;
+            savedNotificationHideTimer.start();
+        }
+    }
+
+    Timer {
+        id: savedNotificationHideTimer
+        interval: 2000
+        onTriggered: {
+            root.showSavedNotification = false;
+        }
+    }
 
     Component.onCompleted: {
         tabs = Persistent.states.overlay.notes.tabs;
@@ -113,6 +165,7 @@ OverlayBackground {
         Persistent.states.overlay.notes.tabs = updatedTabs;
         tabs = updatedTabs;
         switchToTab(tabs.length - 1);
+        tabBar.scrollToEnd();
     }
 
     function closeTab(index) {
@@ -121,6 +174,14 @@ OverlayBackground {
         let updatedTabs = tabs.slice();
         const removedTab = updatedTabs[index];
         updatedTabs.splice(index, 1);
+
+        if (noteFileViews[removedTab.id]) {
+            noteFileViews[removedTab.id].destroy();
+            delete noteFileViews[removedTab.id];
+        }
+
+        const filePath = getNotePath(removedTab.id);
+        Quickshell.execDetached(["rm", "-f", filePath]);
 
         Persistent.states.overlay.notes.tabs = updatedTabs;
 
@@ -140,6 +201,59 @@ OverlayBackground {
         updatedTabs[index] = { "name": newName, "id": updatedTabs[index].id };
         Persistent.states.overlay.notes.tabs = updatedTabs;
         tabs = updatedTabs;
+    }
+
+    function exportNote(filePath) {
+        if (!filePath || filePath.trim() === "") return;
+
+        expandedExportPath = filePath.replace(/^~/, Directories.home.replace("file://", ""));
+
+        exportTestProcess.command = ["bash", "-c", `touch "${expandedExportPath}" 2>/dev/null`];
+        exportTestProcess.running = true;
+    }
+
+    function handleKeyPress(event) {
+        const ctrl = event.modifiers & Qt.ControlModifier;
+        const shift = event.modifiers & Qt.ShiftModifier;
+
+        if (!ctrl) return false;
+
+        switch (event.key) {
+            case Qt.Key_M:
+                root.previewMode = !root.previewMode;
+                if (!root.previewMode) textInput.forceActiveFocus();
+                return true;
+
+            case Qt.Key_T:
+                root.tabBarVisible = !root.tabBarVisible;
+                Persistent.states.overlay.notes.tabBarVisible = root.tabBarVisible;
+                return true;
+
+            case Qt.Key_S:
+                root.exportDialogVisible = !root.exportDialogVisible;
+                return true;
+
+            case Qt.Key_Tab:
+                const nextIndex = (currentTabIndex + 1) % tabs.length;
+                root.switchToTab(nextIndex);
+                return true;
+
+            case Qt.Key_Backtab:
+                const prevIndex = currentTabIndex > 0 ? currentTabIndex - 1 : tabs.length - 1;
+                root.switchToTab(prevIndex);
+                return true;
+
+            case Qt.Key_W:
+                root.closeTab(currentTabIndex);
+                return true;
+
+            case Qt.Key_N:
+                root.addNewTab();
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     function saveContent() {
@@ -306,14 +420,7 @@ OverlayBackground {
                 padding: 24
 
                 Keys.onPressed: event => {
-                    if (event.key === Qt.Key_M && (event.modifiers & Qt.ControlModifier)) {
-                        root.previewMode = !root.previewMode;
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_T && (event.modifiers & Qt.ControlModifier)) {
-                        root.tabBarVisible = !root.tabBarVisible;
-                        Persistent.states.overlay.notes.tabBarVisible = root.tabBarVisible;
-                        event.accepted = true;
-                    }
+                    event.accepted = root.handleKeyPress(event);
                 }
 
                 onTextChanged: {
@@ -341,15 +448,7 @@ OverlayBackground {
                 focus: root.previewMode
 
                 Keys.onPressed: event => {
-                    if (event.key === Qt.Key_M && (event.modifiers & Qt.ControlModifier)) {
-                        root.previewMode = false;
-                        textInput.forceActiveFocus();
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_T && (event.modifiers & Qt.ControlModifier)) {
-                        root.tabBarVisible = !root.tabBarVisible;
-                        Persistent.states.overlay.notes.tabBarVisible = root.tabBarVisible;
-                        event.accepted = true;
-                    }
+                    event.accepted = root.handleKeyPress(event);
                 }
 
                 StyledText {
@@ -437,19 +536,44 @@ OverlayBackground {
         }
 
         RowLayout {
+            id: statusBar
             Layout.fillWidth: true
-            Layout.margins: 16
-            spacing: 12
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
+            Layout.topMargin: 0
+            Layout.bottomMargin: 4
+            spacing: 8
+
+            RippleButton {
+                Layout.preferredWidth: 24
+                Layout.preferredHeight: 24
+                buttonRadius: Appearance.rounding.small
+                colBackground: Qt.rgba(0, 0, 0, 0)
+                colBackgroundHover: Appearance.colors.colLayer3Hover
+                colRipple: Appearance.colors.colLayer3Active
+                visible: !root.exportDialogVisible
+
+                contentItem: MaterialSymbol {
+                    anchors.fill: parent
+                    text: "help"
+                    iconSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: Appearance.colors.colSubtext
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("Keybinds:\nCtrl+M: Toggle Preview/Edit\nCtrl+T: Toggle Tab Bar\nCtrl+S: Export Note\nCtrl+Tab: Next Tab\nCtrl+Shift+Tab: Previous Tab\nCtrl+N: New Tab\nCtrl+W: Close Tab")
+                }
+            }
 
             StyledText {
                 id: modeIndicator
                 Layout.alignment: Qt.AlignLeft
-                text: {
-                    const mode = root.previewMode ? Translation.tr("Preview") : Translation.tr("Edit");
-                    return `${mode} (Ctrl+M | Ctrl+T)`;
-                }
+                text: root.previewMode ? Translation.tr("Preview") : Translation.tr("Edit")
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.small * 0.85
+                visible: !root.exportDialogVisible
             }
 
             Item {
@@ -462,6 +586,7 @@ OverlayBackground {
                 text: saveDebounce.running ? Translation.tr("Saving...") : Translation.tr("Saved    ")
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.small * 0.85
+                visible: !root.exportDialogVisible
             }
         }
     }
@@ -478,5 +603,145 @@ OverlayBackground {
         interval: 100
         repeat: false
         onTriggered: updateCopylistPositions()
+    }
+
+    Rectangle {
+        id: savedNotification
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: root.showSavedNotification ? 12 : -60
+        width: savedNotifContent.width + 16
+        height: 28
+        radius: Appearance.rounding.full
+        color: Appearance.colors.colSuccessContainer
+        z: 2000
+        opacity: root.showSavedNotification ? 1 : 0
+
+        Behavior on anchors.topMargin {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+            }
+        }
+
+        RowLayout {
+            id: savedNotifContent
+            anchors.centerIn: parent
+            spacing: 6
+
+            MaterialSymbol {
+                text: "check"
+                iconSize: 16
+                color: Appearance.colors.colOnSuccess
+            }
+
+            StyledText {
+                text: Translation.tr("Saved")
+                color: Appearance.colors.colOnSuccess
+                font.pixelSize: Appearance.font.pixelSize.small
+                font.weight: Font.Medium
+            }
+        }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        visible: root.exportDialogVisible
+        z: 999
+        onClicked: {
+            root.exportDialogVisible = false;
+            exportPathField.text = "";
+            root.currentExportState = NotesContent.ExportState.Normal;
+        }
+    }
+
+    RowLayout {
+        id: exportDialog
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: parent.bottom
+            bottomMargin: root.exportDialogVisible ? 12 : -60
+        }
+        spacing: 4
+        visible: opacity > 0
+        opacity: root.exportDialogVisible ? 1 : 0
+        z: 1000
+
+        Behavior on anchors.bottomMargin {
+            NumberAnimation {
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+            }
+        }
+
+        ToolbarTextField {
+            id: exportPathField
+            Layout.fillWidth: true
+            Layout.minimumWidth: 100
+            Layout.maximumWidth: 350
+            implicitHeight: 36
+            placeholderText: root.currentExportState === NotesContent.ExportState.Error ? Translation.tr("Permission denied") : Translation.tr("~/Desktop/note.txt")
+            focus: root.exportDialogVisible
+            font.pixelSize: Appearance.font.pixelSize.small
+
+            onAccepted: {
+                if (text.trim().length > 0 && root.currentExportState === NotesContent.ExportState.Normal) {
+                    root.exportNote(text);
+                }
+            }
+
+            onTextChanged: {
+                // Only reset to Normal if user is typing (text is not empty)
+                if (text.length > 0 && root.currentExportState !== NotesContent.ExportState.Normal) {
+                    root.currentExportState = NotesContent.ExportState.Normal;
+                }
+            }
+
+            Keys.onEscapePressed: {
+                root.exportDialogVisible = false;
+                exportPathField.text = "";
+                root.currentExportState = NotesContent.ExportState.Normal;
+            }
+        }
+
+        IconToolbarButton {
+            Layout.preferredWidth: 36
+            Layout.preferredHeight: 36
+            text: switch (root.currentExportState) {
+                case NotesContent.ExportState.Error: return "close";
+                case NotesContent.ExportState.Success: return "check";
+                case NotesContent.ExportState.Normal:
+                default: return "save";
+            }
+            enabled: (root.currentExportState === NotesContent.ExportState.Normal && exportPathField.text.trim().length > 0) ||
+                     root.currentExportState === NotesContent.ExportState.Error ||
+                     root.currentExportState === NotesContent.ExportState.Success
+
+            onClicked: {
+                if (root.currentExportState === NotesContent.ExportState.Normal) {
+                    root.exportNote(exportPathField.text);
+                }
+            }
+        }
+    }
+
+    Timer {
+        id: exportStateResetTimer
+        interval: 1000
+        onTriggered: {
+            root.currentExportState = NotesContent.ExportState.Normal;
+        }
     }
 }
