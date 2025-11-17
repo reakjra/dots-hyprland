@@ -148,12 +148,21 @@ OverlayBackground {
         }
     }
 
+    function restoreFocus() {
+        if (root.previewMode) {
+            Qt.callLater(() => previewContainer.forceActiveFocus());
+        } else {
+            Qt.callLater(() => textInput.forceActiveFocus());
+        }
+    }
+
     function switchToTab(index) {
         if (index >= 0 && index < tabs.length) {
             saveContent();
             currentTabIndex = index;
             Persistent.states.overlay.notes.currentTab = index;
             loadCurrentTab();
+            restoreFocus();
         }
     }
 
@@ -403,6 +412,15 @@ OverlayBackground {
             ScrollBar.vertical.policy: ScrollBar.AsNeeded
             onWidthChanged: root.scheduleCopylistUpdate(true)
 
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onPressed: mouse => {
+                    root.restoreFocus();
+                    mouse.accepted = false;
+                }
+            }
+
             StyledTextArea {
                 id: textInput
                 width: editorScrollView.width
@@ -444,6 +462,14 @@ OverlayBackground {
                     event.accepted = root.handleKeyPress(event);
                 }
 
+                MouseArea {
+                    anchors.fill: parent
+                    onPressed: mouse => {
+                        previewContainer.forceActiveFocus();
+                        mouse.accepted = false;
+                    }
+                }
+
                 StyledText {
                     id: previewText
                     width: parent.width
@@ -467,6 +493,8 @@ OverlayBackground {
                 function onPreviewModeChanged() {
                     if (root.previewMode) {
                         previewContainer.forceActiveFocus();
+                    } else {
+                        textInput.forceActiveFocus();
                     }
                 }
             }
