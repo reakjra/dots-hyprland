@@ -18,6 +18,7 @@ OverlayBackground {
     property var parsedCopylistLines: []
     property real maxCopyButtonSize: 20
     property bool previewMode: false
+    property bool loadingContent: false
     property bool filePickerVisible: false
     property int filePickerMode: 0
 
@@ -85,7 +86,9 @@ OverlayBackground {
 
             fileView.onLoaded.connect(() => {
                 if (getCurrentTabId() === tabId) {
+                    root.loadingContent = true;
                     root.content = fileView.text();
+                    root.loadingContent = false;
                     Qt.callLater(root.updateCopyListEntries);
                 }
             });
@@ -94,7 +97,9 @@ OverlayBackground {
                 if (error === FileViewError.FileNotFound) {
                     fileView.setText("");
                     if (getCurrentTabId() === tabId) {
+                        root.loadingContent = true;
                         root.content = "";
+                        root.loadingContent = false;
                         Qt.callLater(root.updateCopyListEntries);
                     }
                 }
@@ -116,6 +121,7 @@ OverlayBackground {
     function switchToTab(index) {
         if (index >= 0 && index < tabs.length) {
             saveContent();
+            saveDebounce.stop();
             currentTabIndex = index;
             Persistent.states.overlay.notes.currentTab = index;
             loadCurrentTab();
@@ -208,7 +214,9 @@ OverlayBackground {
 
                 fileView.onLoaded.connect(() => {
                     if (getCurrentTabId() === tabId) {
+                        root.loadingContent = true;
                         root.content = fileView.text();
+                        root.loadingContent = false;
                         Qt.callLater(root.updateCopyListEntries);
                     }
                 });
@@ -217,7 +225,9 @@ OverlayBackground {
                     if (error === FileViewError.FileNotFound) {
                         fileView.setText("");
                         if (getCurrentTabId() === tabId) {
+                            root.loadingContent = true;
                             root.content = "";
+                            root.loadingContent = false;
                             Qt.callLater(root.updateCopyListEntries);
                         }
                     }
@@ -228,7 +238,9 @@ OverlayBackground {
 
                 currentTabIndex = tabs.length - 1;
                 Persistent.states.overlay.notes.currentTab = currentTabIndex;
+                root.loadingContent = true;
                 root.content = importFileView.text();
+                root.loadingContent = false;
                 restoreFocus();
                 tabBar.scrollToEnd();
                 root.filePickerVisible = false;
@@ -458,7 +470,7 @@ OverlayBackground {
                 }
 
                 onTextChanged: {
-                    if (textInput.activeFocus) {
+                    if (textInput.activeFocus && !root.loadingContent) {
                         saveDebounce.restart();
                     }
                     root.scheduleCopylistUpdate(true);
