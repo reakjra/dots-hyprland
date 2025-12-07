@@ -134,6 +134,7 @@ Rectangle {
 
                         StyledText {
                             id: tabNameText
+                            height: tabBg.height
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !isEditing
                             text: tabDelegate.modelData.name || "Untitled"
@@ -147,8 +148,8 @@ Rectangle {
                         }
 
                         Rectangle {
-                            width: 18
-                            height: 18
+                            width: 20
+                            height: 20
                             anchors.verticalCenter: parent.verticalCenter
                             visible: root.tabs.length > 1
                             radius: Appearance.rounding.small
@@ -160,6 +161,7 @@ Rectangle {
 
                             MaterialSymbol {
                                 anchors.centerIn: parent
+                                height: tabBg.height
                                 text: "close"
                                 iconSize: 14
                                 color: Appearance.colors.colSubtext
