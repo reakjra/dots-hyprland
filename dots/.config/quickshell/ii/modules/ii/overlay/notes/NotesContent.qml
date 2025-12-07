@@ -13,11 +13,9 @@ OverlayBackground {
     id: root
 
     property alias content: textInput.text
-    property bool pendingReload: false
     property var copyListEntries: []
     property string lastParsedCopylistText: ""
     property var parsedCopylistLines: []
-    property bool isClickthrough: false
     property real maxCopyButtonSize: 20
     property bool previewMode: false
     property bool filePickerVisible: false
@@ -88,10 +86,6 @@ OverlayBackground {
             fileView.onLoaded.connect(() => {
                 if (getCurrentTabId() === tabId) {
                     root.content = fileView.text();
-                    if (pendingReload) {
-                        pendingReload = false;
-                        Qt.callLater(root.focusAtEnd);
-                    }
                     Qt.callLater(root.updateCopyListEntries);
                 }
             });
@@ -101,10 +95,6 @@ OverlayBackground {
                     fileView.setText("");
                     if (getCurrentTabId() === tabId) {
                         root.content = "";
-                        if (pendingReload) {
-                            pendingReload = false;
-                            Qt.callLater(root.focusAtEnd);
-                        }
                         Qt.callLater(root.updateCopyListEntries);
                     }
                 }
