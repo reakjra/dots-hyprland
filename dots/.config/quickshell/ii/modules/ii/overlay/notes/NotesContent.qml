@@ -549,7 +549,7 @@ OverlayBackground {
                         implicitHeight: lineHeight
                         implicitWidth: lineHeight
                         buttonRadius: height / 2
-                        x: textInput.padding + textInput.contentWidth + 35
+                        x: textInput.contentWidth + 24
                         y: modelData.y
                         z: 5
 

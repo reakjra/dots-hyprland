@@ -210,8 +210,8 @@ Rectangle {
             verticalCenter: parent.verticalCenter
             rightMargin: 8
         }
-        width: 28
-        height: 28
+        width: 32
+        height: 32
         buttonRadius: Appearance.rounding.small
         colBackground: "transparent"
         colBackgroundHover: Appearance.colors.colLayer1

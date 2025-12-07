@@ -39,33 +39,46 @@ MouseArea {
     }
 
     Keys.onPressed: event => {
-        if (event.key === Qt.Key_Escape) {
-            root.cancelled();
-            event.accepted = true;
-        } else if (event.modifiers & Qt.AltModifier && event.key === Qt.Key_Up) {
-            root.navigateUp();
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Up) {
-            fileList.moveSelection(-1);
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Down) {
-            fileList.moveSelection(1);
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Left) {
-            root.navigateUp();
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Right) {
-            if (currentIndex >= 0 && currentIndex < folderModel.count) {
-                const isDir = folderModel.get(currentIndex, "fileIsDir");
-                if (isDir) {
-                    const filePath = folderModel.get(currentIndex, "filePath");
-                    root.navigateToDirectory(filePath);
+        switch (event.key) {
+            case Qt.Key_Escape:
+                root.cancelled();
+                event.accepted = true;
+                break;
+
+            case Qt.Key_Up:
+                if (event.modifiers & Qt.AltModifier) {
+                    root.navigateUp();
+                } else {
+                    fileList.moveSelection(-1);
                 }
-            }
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            fileList.activateCurrent();
-            event.accepted = true;
+                event.accepted = true;
+                break;
+
+            case Qt.Key_Down:
+                fileList.moveSelection(1);
+                event.accepted = true;
+                break;
+
+            case Qt.Key_Left:
+                root.navigateUp();
+                event.accepted = true;
+                break;
+
+            case Qt.Key_Right:
+                if (currentIndex >= 0 && currentIndex < folderModel.count) {
+                    const isDir = folderModel.get(currentIndex, "fileIsDir");
+                    if (isDir) {
+                        root.navigateToDirectory(folderModel.get(currentIndex, "filePath"));
+                    }
+                }
+                event.accepted = true;
+                break;
+
+            case Qt.Key_Return:
+            case Qt.Key_Enter:
+                fileList.activateCurrent();
+                event.accepted = true;
+                break;
         }
     }
 
