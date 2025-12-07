@@ -190,6 +190,7 @@ OverlayBackground {
         root.filePickerVisible = false;
         root.showSavedNotification = true;
         savedNotificationHideTimer.start();
+        restoreFocus();
     }
 
     function importNote(filePath) {
@@ -713,7 +714,10 @@ OverlayBackground {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: root.filePickerVisible = false
+            onClicked: {
+                root.filePickerVisible = false;
+                root.restoreFocus();
+            }
         }
     }
 
@@ -754,6 +758,7 @@ OverlayBackground {
 
             onCancelled: {
                 root.filePickerVisible = false;
+                root.restoreFocus();
             }
 
             Component.onCompleted: {

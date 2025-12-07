@@ -24,17 +24,29 @@ MouseArea {
 
     onDirectoryChanged: currentIndex = 0
 
+    function isSafePath(path) {
+        return path.startsWith("/home");
+    }
+
     function navigateUp() {
         const parent = FileUtils.parentDirectory(root.directory);
         if (parent.length > 0 && parent !== "/") {
-            root.directory = parent;
+            if (isSafePath(parent)) {
+                root.directory = parent;
+            } else {
+                root.directory = "/home";
+            }
         }
     }
 
     function navigateToDirectory(path) {
         const cleanPath = FileUtils.trimFileProtocol(path);
         if (cleanPath.length > 0 && cleanPath !== "/") {
-            root.directory = cleanPath;
+            if (isSafePath(cleanPath)) {
+                root.directory = cleanPath;
+            } else {
+                root.directory = "/home";
+            }
         }
     }
 

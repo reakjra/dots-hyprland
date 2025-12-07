@@ -96,6 +96,7 @@ Rectangle {
                             height: tabBg.height
                             visible: isEditing
                             text: tabDelegate.modelData.name || "Untitled"
+                            font.family: Appearance.font.family.title
                             font.pixelSize: Appearance.font.pixelSize.normal
                             color: Appearance.colors.colOnLayer1
                             verticalAlignment: TextInput.AlignVCenter
@@ -138,6 +139,7 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !isEditing
                             text: tabDelegate.modelData.name || "Untitled"
+                            font.family: Appearance.font.family.title
                             font.pixelSize: Appearance.font.pixelSize.normal
                             font.weight: isActive ? Font.Medium : Font.Normal
                             color: isActive ? Appearance.colors.colOnLayer1 : Appearance.colors.colSubtext
