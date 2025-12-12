@@ -4,19 +4,13 @@ import Quickshell.Io
 import qs.modules.common
 import qs.modules.common.widgets
 
-Loader {
+MaterialSymbol {
     id: root
-    property bool vertical: false
-    property color color: Appearance.colors.colOnSurfaceVariant
     property bool capsLockOn: false
 
-    active: capsLockOn && (Config?.options.bar.indicators.capsLock.enable ?? true)
-    visible: active
-    opacity: active ? 1 : 0
-
-    Behavior on opacity {
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(root)
-    }
+    text: "font_download"
+    fill: capsLockOn ? 1 : 0
+    iconSize: Appearance.font.pixelSize.larger
 
     Timer {
         interval: 200
@@ -35,12 +29,5 @@ Loader {
                 root.capsLockOn = (value === "1")
             }
         }
-    }
-
-    sourceComponent: MaterialSymbol {
-        text: "font_download"
-        fill: root.capsLockOn ? 1 : 0
-        iconSize: Appearance.font.pixelSize.larger
-        color: root.color
     }
 }

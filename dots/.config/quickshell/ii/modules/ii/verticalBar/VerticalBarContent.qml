@@ -265,10 +265,21 @@ Item { // Bar content region
                         Layout.bottomMargin: indicatorsColumnLayout.realSpacing
                         color: rightSidebarButton.colText
                     }
-                    Bar.CapsLockIndicator {
+                    Revealer {
+                        id: capsLockRevealer
                         vertical: true
-                        Layout.bottomMargin: indicatorsColumnLayout.realSpacing
-                        color: rightSidebarButton.colText
+                        reveal: capsLockIndicator.capsLockOn && (Config?.options.bar.indicators.capsLock.enable ?? true)
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: reveal ? indicatorsColumnLayout.realSpacing : 0
+                        implicitHeight: reveal ? capsLockIndicator.implicitHeight : 0
+                        implicitWidth: reveal ? capsLockIndicator.implicitWidth : 0
+                        Behavior on Layout.bottomMargin {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+                        Bar.CapsLockIndicator {
+                            id: capsLockIndicator
+                            color: rightSidebarButton.colText
+                        }
                     }
                     Revealer {
                         vertical: true
