@@ -271,6 +271,9 @@ Singleton {
                     property JsonObject notifications: JsonObject {
                         property bool showUnreadCount: false
                     }
+                    property JsonObject capsLock: JsonObject {
+                        property bool enable: true
+                    }
                 }
                 property JsonObject tooltips: JsonObject {
                     property bool clickToShow: false

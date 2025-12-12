@@ -12,7 +12,7 @@ Revealer {
     property bool capsLockOn: false
     property real spacing: 15
 
-    reveal: capsLockOn
+    reveal: capsLockOn && (Config?.options.bar.indicators.capsLock.enable ?? true)
     Layout.fillHeight: true
     Layout.rightMargin: reveal ? (vertical ? 0 : spacing) : 0
     Layout.bottomMargin: reveal ? (vertical ? spacing : 0) : 0
