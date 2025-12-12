@@ -1,28 +1,21 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import qs.modules.common
 import qs.modules.common.widgets
 
-Revealer {
+Loader {
     id: root
     property bool vertical: false
     property color color: Appearance.colors.colOnSurfaceVariant
     property bool capsLockOn: false
-    property real spacing: 15
 
-    reveal: capsLockOn && (Config?.options.bar.indicators.capsLock.enable ?? true)
-    Layout.fillHeight: true
-    Layout.rightMargin: reveal ? (vertical ? 0 : spacing) : 0
-    Layout.bottomMargin: reveal ? (vertical ? spacing : 0) : 0
+    active: capsLockOn && (Config?.options.bar.indicators.capsLock.enable ?? true)
+    visible: active
+    opacity: active ? 1 : 0
 
-    Behavior on Layout.rightMargin {
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-    }
-
-    Behavior on Layout.bottomMargin {
-        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+    Behavior on opacity {
+        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(root)
     }
 
     Timer {
@@ -44,10 +37,9 @@ Revealer {
         }
     }
 
-    MaterialSymbol {
-        id: capsIcon
-        anchors.centerIn: parent
-        text: "shift"
+    sourceComponent: MaterialSymbol {
+        text: "font_download"
+        fill: root.capsLockOn ? 1 : 0
         iconSize: Appearance.font.pixelSize.larger
         color: root.color
     }
