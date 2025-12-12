@@ -265,6 +265,11 @@ Item { // Bar content region
                         Layout.bottomMargin: indicatorsColumnLayout.realSpacing
                         color: rightSidebarButton.colText
                     }
+                    Bar.CapsLockIndicator {
+                        vertical: true
+                        spacing: indicatorsColumnLayout.realSpacing
+                        color: rightSidebarButton.colText
+                    }
                     Revealer {
                         vertical: true
                         reveal: Notifications.silent || Notifications.unread > 0
