@@ -73,6 +73,19 @@ Item { // Bar content region
                 colBackground: barTopSectionMouseArea.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
             }
 
+            Bar.BarGroup {
+                vertical: true
+                Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: false
+                Layout.topMargin: 8
+
+                Bar.ActiveWindow {
+                    vertical: true
+                    Layout.fillWidth: true
+                    Layout.fillHeight: false
+                }
+            }
+
             Item {
                 Layout.fillHeight: true
             }
