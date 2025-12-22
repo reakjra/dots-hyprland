@@ -53,6 +53,7 @@ ShellRoot {
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
         Hyprsunset.load()
+        Hypridle.loadConfig()
         FirstRunExperience.load()
         ConflictKiller.load()
         Cliphist.refresh()

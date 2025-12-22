@@ -129,6 +129,88 @@ ContentPage {
         }
     }
 
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 6
+
+        RowLayout {
+            spacing: 6
+
+            OptionalMaterialSymbol {
+                icon: "bedtime"
+                iconSize: Appearance.font.pixelSize.hugeass
+            }
+            StyledText {
+                text: Translation.tr("Idle & Screen Timeouts")
+                font.pixelSize: Appearance.font.pixelSize.larger
+                font.weight: Font.Medium
+                color: Appearance.colors.colOnSecondaryContainer
+            }
+            MaterialSymbol {
+                visible: !Hypridle.hasValidIdentifiers
+                text: "info"
+                iconSize: Appearance.font.pixelSize.large
+                color: Appearance.colors.colSubtext
+
+                MouseArea {
+                    id: hypridleInfoMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.WhatsThisCursor
+                    StyledToolTip {
+                        extraVisibleCondition: false
+                        alternativeVisibleCondition: hypridleInfoMouse.containsMouse
+                        text: Translation.tr("Missing required identifiers in hypridle.conf")
+                    }
+                }
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 4
+
+            ConfigSpinBox {
+                enabled: Hypridle.ready && Hypridle.hasValidIdentifiers
+                icon: "lock"
+                text: Translation.tr("Lock screen")
+                value: Hypridle.lockTimeout
+                from: 1
+                to: 240
+                stepSize: 1
+                onValueChanged: {
+                    Hypridle.lockTimeout = value
+                }
+            }
+
+            ConfigSpinBox {
+                enabled: Hypridle.ready && Hypridle.hasValidIdentifiers
+                icon: "tv_off"
+                text: Translation.tr("Turn off screen")
+                value: Hypridle.screenTimeout
+                from: 1
+                to: 240
+                stepSize: 1
+                onValueChanged: {
+                    Hypridle.screenTimeout = value
+                }
+            }
+
+            ConfigSpinBox {
+                enabled: Hypridle.ready && Hypridle.hasValidIdentifiers
+                icon: "power_settings_new"
+                text: Translation.tr("Suspend system")
+                value: Hypridle.suspendTimeout
+                from: 1
+                to: 240
+                stepSize: 1
+                onValueChanged: {
+                    Hypridle.suspendTimeout = value
+                }
+            }
+        }
+    }
+
     ContentSection {
         icon: "language"
         title: Translation.tr("Language")
