@@ -9,21 +9,15 @@ import qs.modules.ii.overlay
 StyledOverlayWidget {
     id: root
     showClickabilityButton: false
-    resizable: false
+    resizable: true
     clickthrough: true
+    minimumWidth: 50
+    minimumHeight: 50
 
     property string imageSource: Config.options.overlay.floatingImage.imageSource
     property real scaleFactor: Config.options.overlay.floatingImage.scale
     property int imageWidth: 0
     property int imageHeight: 0
-
-    // Override to always save 0 size
-    function savePosition(xPos = root.x, yPos = root.y, width = 0, height = 0) {
-        root.persistentStateEntry.x = Math.round(xPos);
-        root.persistentStateEntry.y = Math.round(yPos);
-        root.persistentStateEntry.width = 0
-        root.persistentStateEntry.height = 0
-    }
 
     onImageSourceChanged: {
         imageDownloader.running = false;
@@ -31,31 +25,12 @@ StyledOverlayWidget {
         imageDownloader.filePath = Qt.resolvedUrl(Directories.tempImages + "/" + Qt.md5(root.imageSource))
         imageDownloader.running = true;
     }
-    onScaleFactorChanged: {
-        setSize();
-    }
-
-    function setSize() {
-        bg.implicitWidth = root.imageWidth * root.scaleFactor;
-        bg.implicitHeight = root.imageHeight * root.scaleFactor;
-    }
 
     contentItem: OverlayBackground {
         id: bg
+        anchors.fill: parent
         color: ColorUtils.transparentize(Appearance.m3colors.m3surfaceContainer, root.actuallyPinned ? 1 : 0)
         radius: root.contentRadius
-
-        WheelHandler {
-            onWheel: (event) => {
-                if (event.angleDelta.y < 0) {
-                    Config.options.overlay.floatingImage.scale = Math.max(0.1, Config.options.overlay.floatingImage.scale - 0.1);
-                }
-                else if (event.angleDelta.y > 0) {
-                    Config.options.overlay.floatingImage.scale = Math.min(5.0, Config.options.overlay.floatingImage.scale + 0.1);
-                }
-            }
-            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-        }
 
         layer.enabled: true
         layer.effect: OpacityMask {
@@ -68,9 +43,8 @@ StyledOverlayWidget {
 
         AnimatedImage {
             id: animatedImage
-            anchors.centerIn: parent
-            width: root.imageWidth * root.scaleFactor
-            height: root.imageHeight * root.scaleFactor
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
             sourceSize.width: width
             sourceSize.height: height
 
@@ -86,7 +60,13 @@ StyledOverlayWidget {
                 onDone: (path, width, height) => {
                     root.imageWidth = width;
                     root.imageHeight = height;
-                    root.setSize();
+
+                    // Initial sizing if not set
+                    if (root.persistentStateEntry.width <= 1) {
+                        let initialScale = root.scaleFactor > 0 ? root.scaleFactor : 1.0;
+                        root.savePosition(root.x, root.y, width * initialScale, height * initialScale);
+                    }
+
                     animatedImage.source = path;
                 }
             }
