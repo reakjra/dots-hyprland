@@ -46,6 +46,8 @@ Flow {
             buttonIcon: modelData.icon || ""
             buttonText: modelData.displayName
             toggled: root.currentValue == modelData.value
+            releaseAction: modelData.releaseAction || ""
+            middleClickAction: modelData.middleClickAction || ""
             onClicked: {
                 root.selected(modelData.value);
             }

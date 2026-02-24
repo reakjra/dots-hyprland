@@ -90,6 +90,22 @@ ContentPage {
         }
     }
 
+    ContentSection {
+        icon: "palette"
+        title: Translation.tr("Color overrides")
 
+        ConfigSwitch {
+            buttonIcon: "lock"
+            text: Translation.tr("Preserve overrides on wallpaper change")
+            checked: ColorOverrideStore.data.preserveOnWallpaperChange
+            onCheckedChanged: {
+                ColorOverrideStore.data.preserveOnWallpaperChange = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("When disabled, color overrides are reset when switching wallpapers")
+            }
+        }
 
+        ColorOverrides {}
+    }
 }
