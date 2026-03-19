@@ -363,6 +363,7 @@ MouseArea {
                             ratio: model.ratio
                             views: model.views
                             favorites: model.favorites
+                            isDownloading: Wallhaven.downloadingId === model.wallId
 
                             width: wallhavenGrid.cellWidth
                             height: wallhavenGrid.cellHeight
@@ -384,7 +385,7 @@ MouseArea {
 
                     // Wallhaven loading indicator
                     Loader {
-                        active: root.wallhavenMode && ((Wallhaven.loading && Wallhaven.results.count === 0) || Wallhaven.downloading)
+                        active: root.wallhavenMode && Wallhaven.loading && Wallhaven.results.count === 0
                         anchors.centerIn: parent
                         sourceComponent: ColumnLayout {
                             spacing: 8
@@ -393,7 +394,7 @@ MouseArea {
                             }
                             StyledText {
                                 Layout.alignment: Qt.AlignHCenter
-                                text: Wallhaven.downloading ? Translation.tr("Downloading...") : Translation.tr("Loading...")
+                                text: Translation.tr("Loading...")
                                 color: Appearance.colors.colOnLayer0
                                 font.pixelSize: Appearance.font.pixelSize.small
                             }

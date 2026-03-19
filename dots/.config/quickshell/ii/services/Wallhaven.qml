@@ -24,6 +24,7 @@ Singleton {
     property int totalResults: 0
     property bool loading: false
     property bool downloading: false
+    property string downloadingId: ""
     property string seed: ""
 
     signal resultsReset()
@@ -134,6 +135,7 @@ Singleton {
         running: false
         onExited: (exitCode, exitStatus) => {
             root.downloading = false
+            root.downloadingId = ""
             if (exitCode === 0 && downloadProc.targetPath)
                 Wallpapers.apply(downloadProc.targetPath)
             else
@@ -146,6 +148,7 @@ Singleton {
         const ext = fullUrl.split(".").pop()
         const targetPath = `${cacheDir}/${wallId}.${ext}`
         downloading = true
+        downloadingId = wallId
         downloadProc.targetPath = targetPath
         downloadProc.command = [
             "bash", "-c",

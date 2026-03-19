@@ -12,6 +12,7 @@ MouseArea {
     property string ratio
     property int views
     property int favorites
+    property bool isDownloading: false
 
     property alias colBackground: background.color
     property alias colText: infoText.color
@@ -68,6 +69,17 @@ MouseArea {
                     active: thumbImage.status === Image.Loading
                     anchors.centerIn: parent
                     sourceComponent: MaterialLoadingIndicator {}
+                }
+
+                // Download overlay
+                Rectangle {
+                    visible: root.isDownloading
+                    anchors.fill: parent
+                    radius: Appearance.rounding.small
+                    color: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.4)
+                    MaterialLoadingIndicator {
+                        anchors.centerIn: parent
+                    }
                 }
 
                 // Fav count badge
