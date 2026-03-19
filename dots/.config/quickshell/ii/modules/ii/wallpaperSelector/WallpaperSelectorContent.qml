@@ -15,6 +15,7 @@ MouseArea {
     property int columns: 4
     property real previewCellAspectRatio: 4 / 3
     property bool useDarkMode: Appearance.m3colors.darkmode
+    property bool wallhavenMode: false
 
     function updateThumbnails() {
         const totalImageMargin = (Appearance.sizes.wallpaperSelectorItemMargins + Appearance.sizes.wallpaperSelectorItemPadding) * 2
@@ -49,6 +50,7 @@ MouseArea {
 
     acceptedButtons: Qt.BackButton | Qt.ForwardButton
     onPressed: event => {
+        if (root.wallhavenMode) return
         if (event.button === Qt.BackButton) {
             Wallpapers.navigateBack();
         } else if (event.button === Qt.ForwardButton) {
@@ -60,51 +62,55 @@ MouseArea {
         if (event.key === Qt.Key_Escape) {
             GlobalStates.wallpaperSelectorOpen = false;
             event.accepted = true;
-        } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) { // Intercept Ctrl+V to handle "paste to go to" in pickers
-            root.handleFilePasting(event);
-        } else if (event.modifiers & Qt.AltModifier && event.key === Qt.Key_Up) {
-            Wallpapers.navigateUp();
-            event.accepted = true;
-        } else if (event.modifiers & Qt.AltModifier && event.key === Qt.Key_Left) {
-            Wallpapers.navigateBack();
-            event.accepted = true;
-        } else if (event.modifiers & Qt.AltModifier && event.key === Qt.Key_Right) {
-            Wallpapers.navigateForward();
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Left) {
-            grid.moveSelection(-1);
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Right) {
-            grid.moveSelection(1);
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Up) {
-            grid.moveSelection(-grid.columns);
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Down) {
-            grid.moveSelection(grid.columns);
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            grid.activateCurrent();
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Backspace) {
-            if (filterField.text.length > 0) {
-                filterField.text = filterField.text.substring(0, filterField.text.length - 1);
-            }
-            filterField.forceActiveFocus();
-            event.accepted = true;
-        } else if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_L) {
-            addressBar.focusBreadcrumb();
-            event.accepted = true;
-        } else if (event.key === Qt.Key_Slash) {
-            filterField.forceActiveFocus();
-            event.accepted = true;
-        } else {
-            if (event.text.length > 0) {
-                filterField.text += event.text;
-                filterField.cursorPosition = filterField.text.length;
+            return;
+        }
+        if (!root.wallhavenMode) {
+            if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) {
+                root.handleFilePasting(event);
+            } else if (event.modifiers & Qt.AltModifier && event.key === Qt.Key_Up) {
+                Wallpapers.navigateUp();
+                event.accepted = true;
+            } else if (event.modifiers & Qt.AltModifier && event.key === Qt.Key_Left) {
+                Wallpapers.navigateBack();
+                event.accepted = true;
+            } else if (event.modifiers & Qt.AltModifier && event.key === Qt.Key_Right) {
+                Wallpapers.navigateForward();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Left) {
+                grid.moveSelection(-1);
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Right) {
+                grid.moveSelection(1);
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Up) {
+                grid.moveSelection(-grid.columns);
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Down) {
+                grid.moveSelection(grid.columns);
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                grid.activateCurrent();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Backspace) {
+                if (filterField.text.length > 0) {
+                    filterField.text = filterField.text.substring(0, filterField.text.length - 1);
+                }
                 filterField.forceActiveFocus();
+                event.accepted = true;
+            } else if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_L) {
+                addressBar.focusBreadcrumb();
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Slash) {
+                filterField.forceActiveFocus();
+                event.accepted = true;
+            } else {
+                if (event.text.length > 0) {
+                    filterField.text += event.text;
+                    filterField.cursorPosition = filterField.text.length;
+                    filterField.forceActiveFocus();
+                }
+                event.accepted = true;
             }
-            event.accepted = true;
         }
     }
 
@@ -172,6 +178,8 @@ MouseArea {
                             { icon: "", name: "---", path: "INTENTIONALLY_INVALID_DIR" }, 
                             { icon: "wallpaper", name: "Wallpapers", path: `${Directories.pictures}/Wallpapers` }, 
                             ...(Config.options.policies.weeb === 1 ? [{ icon: "favorite", name: "Homework", path: `${Directories.pictures}/homework` }] : []),
+                            { icon: "", name: "---", path: "__separator__" },
+                            { icon: "travel_explore", name: "Wallhaven", path: "__wallhaven__" },
                         ]
                         delegate: RippleButton {
                             id: quickDirButton
@@ -180,9 +188,17 @@ MouseArea {
                                 left: parent.left
                                 right: parent.right
                             }
-                            onClicked: Wallpapers.setDirectory(quickDirButton.modelData.path)
+                            onClicked: {
+                                if (modelData.path === "__wallhaven__") {
+                                    root.wallhavenMode = true
+                                    Wallhaven.search()
+                                } else {
+                                    root.wallhavenMode = false
+                                    Wallpapers.setDirectory(quickDirButton.modelData.path)
+                                }
+                            }
                             enabled: modelData.icon.length > 0
-                            toggled: Wallpapers.directory === Qt.resolvedUrl(modelData.path)
+                            toggled: modelData.path === "__wallhaven__" ? root.wallhavenMode : (!root.wallhavenMode && Wallpapers.directory === Qt.resolvedUrl(modelData.path))
                             colBackgroundToggled: Appearance.colors.colSecondaryContainer
                             colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
                             colRippleToggled: Appearance.colors.colSecondaryContainerActive
@@ -215,6 +231,7 @@ MouseArea {
 
                 AddressBar {
                     id: addressBar
+                    visible: !root.wallhavenMode
                     Layout.margins: 4
                     Layout.fillWidth: true
                     Layout.fillHeight: false
@@ -222,6 +239,14 @@ MouseArea {
                     onNavigateToDirectory: path => {
                         Wallpapers.setDirectory(path.length == 0 ? "/" : path);
                     }
+                    radius: wallpaperGridBackground.radius - Layout.margins
+                }
+
+                WallhavenControls {
+                    visible: root.wallhavenMode
+                    Layout.margins: 4
+                    Layout.fillWidth: true
+                    Layout.fillHeight: false
                     radius: wallpaperGridBackground.radius - Layout.margins
                 }
 
@@ -250,7 +275,7 @@ MouseArea {
 
                     GridView {
                         id: grid
-                        visible: Wallpapers.folderModel.count > 0
+                        visible: !root.wallhavenMode && Wallpapers.folderModel.count > 0
 
                         readonly property int columns: root.columns
                         readonly property int rows: Math.max(1, Math.ceil(count / columns))
@@ -310,8 +335,74 @@ MouseArea {
                         }
                     }
 
+                    // Wallhaven results grid
+                    GridView {
+                        id: wallhavenGrid
+                        visible: root.wallhavenMode
+                        anchors.fill: parent
+                        Connections {
+                            target: Wallhaven
+                            function onResultsReset() { wallhavenGrid.contentY = 0 }
+                        }
+                        cellWidth: width / root.columns
+                        cellHeight: cellWidth / root.previewCellAspectRatio
+                        interactive: true
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        ScrollBar.vertical: StyledScrollBar {}
+
+                        model: Wallhaven.results
+
+                        onAtYEndChanged: {
+                            if (atYEnd && count > 0) Wallhaven.loadMore()
+                        }
+
+                        delegate: WallhavenItem {
+                            thumbUrl: model.thumbUrl
+                            resolution: model.resolution
+                            ratio: model.ratio
+                            views: model.views
+                            favorites: model.favorites
+
+                            width: wallhavenGrid.cellWidth
+                            height: wallhavenGrid.cellHeight
+                            colBackground: containsMouse ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colPrimaryContainer)
+                            colText: containsMouse ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer0
+
+                            onActivated: Wallhaven.applyWallpaper(model.fullUrl, model.wallId)
+                        }
+
+                        layer.enabled: true
+                        layer.effect: OpacityMask {
+                            maskSource: Rectangle {
+                                width: gridDisplayRegion.width
+                                height: gridDisplayRegion.height
+                                radius: wallpaperGridBackground.radius
+                            }
+                        }
+                    }
+
+                    // Wallhaven loading indicator
+                    Loader {
+                        active: root.wallhavenMode && ((Wallhaven.loading && Wallhaven.results.count === 0) || Wallhaven.downloading)
+                        anchors.centerIn: parent
+                        sourceComponent: ColumnLayout {
+                            spacing: 8
+                            MaterialLoadingIndicator {
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            StyledText {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: Wallhaven.downloading ? Translation.tr("Downloading...") : Translation.tr("Loading...")
+                                color: Appearance.colors.colOnLayer0
+                                font.pixelSize: Appearance.font.pixelSize.small
+                            }
+                        }
+                    }
+
                     Toolbar {
                         id: extraOptions
+                        visible: !root.wallhavenMode
                         anchors {
                             bottom: parent.bottom
                             horizontalCenter: parent.horizontalCenter
@@ -410,7 +501,8 @@ MouseArea {
         target: GlobalStates
         function onWallpaperSelectorOpenChanged() {
             if (GlobalStates.wallpaperSelectorOpen && monitorIsFocused) {
-                filterField.forceActiveFocus();
+                if (!root.wallhavenMode)
+                    filterField.forceActiveFocus();
             }
         }
     }
